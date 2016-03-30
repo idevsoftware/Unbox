@@ -546,6 +546,29 @@ public class Unboxer {
     public func failForInvalidValue(invalidValue: Any?, forKey key: String) {
         self.failureInfo = (key, invalidValue)
     }
+
+    /// Static method that returns an Unboxer instance for a given JSON data
+    public static func unboxerFromData(data: NSData, context: Any?) throws -> Unboxer {
+        do {
+            guard let dictionary = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? UnboxableDictionary else {
+                throw UnboxError.InvalidData
+            }
+
+            return Unboxer(dictionary: dictionary, context: context)
+        } catch {
+            throw UnboxError.InvalidData
+        }
+    }
+
+    /// Shorthand for method above
+    public static func unboxer(data data: NSData) -> Unboxer? {
+        do {
+            let unboxer = try unboxerFromData(data, context: nil)
+            return unboxer
+        } catch {
+            return nil
+        }
+    }
 }
 
 // MARK: - UnboxValueResolver
@@ -649,18 +672,6 @@ private extension UnboxableWithContext {
 }
 
 private extension Unboxer {
-    static func unboxerFromData(data: NSData, context: Any?) throws -> Unboxer {
-        do {
-            guard let dictionary = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? UnboxableDictionary else {
-                throw UnboxError.InvalidData
-            }
-            
-            return Unboxer(dictionary: dictionary, context: context)
-        } catch {
-            throw UnboxError.InvalidData
-        }
-    }
-    
     static func unboxersFromData(data: NSData, context: Any?) throws -> [Unboxer] {
         do {
             guard let array = try NSJSONSerialization.JSONObjectWithData(data, options: [.AllowFragments]) as? [UnboxableDictionary] else {
